@@ -68,4 +68,4 @@ Pinch-to-zoom is implemented using the `PhotoView` package wrapped in a `PinchTo
 
 ---
 
-*Built with ❤️ by Antigravity (Meta Instagram Team Senior Engineer Persona)*
+*Built with ❤️ by Yash*
