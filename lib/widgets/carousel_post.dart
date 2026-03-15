@@ -6,63 +6,119 @@ import '../utils/constants.dart';
 
 class CarouselPost extends StatefulWidget {
   final List<String> images;
+  final VoidCallback? onDoubleTap;
 
-  const CarouselPost({super.key, required this.images});
+  const CarouselPost({super.key, required this.images, this.onDoubleTap});
 
   @override
   State<CarouselPost> createState() => _CarouselPostState();
 }
 
-class _CarouselPostState extends State<CarouselPost> {
+class _CarouselPostState extends State<CarouselPost> with TickerProviderStateMixin {
   int _currentIndex = 0;
+  bool _showHeart = false;
+  late AnimationController _heartController;
+  late Animation<double> _heartAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _heartController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _heartAnimation = Tween<double>(begin: 0.0, end: 1.2).animate(
+      CurvedAnimation(parent: _heartController, curve: Curves.elasticOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _heartController.dispose();
+    super.dispose();
+  }
+
+  void _handleDoubleTap() {
+    if (widget.onDoubleTap != null) {
+      widget.onDoubleTap!();
+    }
+    setState(() {
+      _showHeart = true;
+    });
+    _heartController.forward().then((_) {
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (mounted) {
+          _heartController.reverse().then((_) {
+            setState(() {
+              _showHeart = false;
+            });
+          });
+        }
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Stack(
-          alignment: Alignment.topRight,
-          children: [
-            CarouselSlider(
-              options: CarouselOptions(
-                height: 400,
-                viewportFraction: 1.0,
-                enlargeCenterPage: false,
-                enableInfiniteScroll: false,
-                onPageChanged: (index, reason) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
-              ),
-              items: widget.images.map((url) {
-                return Builder(
-                  builder: (BuildContext context) {
-                    return PinchToZoomImage(url: url);
+        GestureDetector(
+          onDoubleTap: _handleDoubleTap,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              CarouselSlider(
+                options: CarouselOptions(
+                  height: 400,
+                  viewportFraction: 1.0,
+                  enlargeCenterPage: false,
+                  enableInfiniteScroll: false,
+                  onPageChanged: (index, reason) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
                   },
-                );
-              }).toList(),
-            ),
-            if (widget.images.length > 1)
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(178),
-                    borderRadius: BorderRadius.circular(20),
+                ),
+                items: widget.images.map((url) {
+                  return Builder(
+                    builder: (BuildContext context) {
+                      return PinchToZoomImage(url: url);
+                    },
+                  );
+                }).toList(),
+              ),
+              // Big Heart Animation
+              if (_showHeart)
+                ScaleTransition(
+                  scale: _heartAnimation,
+                  child: const Icon(
+                    Icons.favorite,
+                    color: Colors.white,
+                    size: 100,
                   ),
-                  child: Text(
-                    '${_currentIndex + 1}/${widget.images.length}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                ),
+              if (widget.images.length > 1)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(178),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${_currentIndex + 1}/${widget.images.length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
         if (widget.images.length > 1)
           Padding(

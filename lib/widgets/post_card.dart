@@ -56,7 +56,10 @@ class PostCard extends ConsumerWidget {
         ),
 
         // Post Content (Image/Carousel)
-        CarouselPost(images: post.images),
+        CarouselPost(
+          images: post.images,
+          onDoubleTap: () => ref.read(postProvider.notifier).toggleLike(post.id),
+        ),
 
         // Post Actions
         Padding(
